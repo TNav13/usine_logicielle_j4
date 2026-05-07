@@ -54,3 +54,37 @@ J'ai testé GitLeaks localement et simulé une fuite de secret. L'outil a parfai
 **Question 6 : Pourquoi GitLeaks est-il placé au tout début du pipeline, avant même le linting ?**
 
 Pour appliquer le principe du **fail-fast**. La détection d'un secret est une faille de sécurité majeure qui doit stopper immédiatement le pipeline pour éviter de propager le risque et pour économiser des ressources de calcul inutiles sur un commit qui de toute façon sera rejeté.
+
+## Partie 5 — Pipeline de sécurité complet
+
+J'ai assemblé le pipeline final intégrant toutes les couches de sécurité et de qualité. J'ai également mis à jour le fichier `.gitignore` pour exclure les rapports générés.
+
+### Questions
+**Question 7 (compte-rendu) : Citez 3 risques de l'OWASP Top 10 et expliquez comment votre pipeline CI les adresse (ou pas).**
+
+*   **A06:2021 – Composants vulnérables et obsolètes :** Adressé par `pip-audit` et `Dependabot`.
+*   **A03:2021 – Injection :** Adressé par `Bandit` et `Semgrep` qui détectent les injections SQL ou de commandes.
+*   **A07:2021 – Échecs d'identification et d'authentification :** Adressé partiellement par nos tests unitaires qui valident la logique métier.
+
+**Question 8 (compte-rendu) : Décrivez l'ordre complet de votre pipeline final. Pour chaque étape, indiquez quel type de problème elle détecte.**
+
+1.  **GitLeaks :** Détecte les secrets (clés API, mots de passe) commités.
+2.  **Black :** Problèmes de formatage.
+3.  **Ruff :** Mauvaises pratiques de codage et bugs potentiels.
+4.  **pip-audit :** Vulnérabilités connues (CVE) dans les dépendances.
+5.  **Bandit :** Failles de sécurité spécifiques au langage Python (SAST).
+6.  **Semgrep :** Patterns de code dangereux et conformité (SAST).
+7.  **Pytest :** Erreurs fonctionnelles et mesure de la couverture de tests.
+8.  **SonarCloud :** Analyse globale de la qualité, sécurité et dette technique.
+
+**Question 9 (compte-rendu) : Comparez les approches Shift Left et audit de sécurité traditionnel. Quels sont les avantages du Shift Left ?**
+
+L'audit traditionnel se fait en fin de cycle de développement, ce qui rend les corrections coûteuses et tardives. Le **Shift Left** déplace ces contrôles au plus tôt dans le cycle (dès le commit).
+*   **Avantages :** Corrections moins coûteuses, meilleure qualité de code dès le départ, réduction du temps de mise sur le marché (Time to Market) et autonomisation des développeurs sur la sécurité.
+
+**Question 10 (compte-rendu) : Votre pipeline contient maintenant de nombreuses étapes. Si le temps d'exécution devenait trop long, comment pourriez-vous l'optimiser ?**
+
+1.  **Parallélisation :** Exécuter les outils de scan (SAST) simultanément.
+2.  **Scan incrémental :** Ne scanner que les fichiers modifiés.
+3.  **Cachage :** Utiliser des caches persistants pour les dépendances et les résultats intermédiaires.
+4.  **Infrastructure :** Utiliser des runners plus puissants ou des images Docker optimisées.
